@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type EventCardProps = {
   id: string;
@@ -13,6 +14,7 @@ type EventCardProps = {
   attendees: number;
   connections: number;
   description: string;
+  hostImageUrl?: string;
 };
 
 export default function EventCard({
@@ -24,6 +26,7 @@ export default function EventCard({
   attendees,
   connections,
   description,
+  hostImageUrl,
 }: EventCardProps) {
   const { colors } = useTheme();
 
@@ -34,35 +37,45 @@ export default function EventCard({
   return (
     <Pressable onPress={handlePress} style={styles.container}>
       <Image source={{ uri: imageUrl }} style={styles.image} />
-      <View style={styles.overlay}>
-        <Text style={[styles.title, { color: colors.background }]}>{title}</Text>
-        <View style={styles.detailsContainer}>
-          <View style={styles.details}>
-            <Text style={[styles.date, { color: colors.background }]}>{date}</Text>
-            <Text style={[styles.price, { color: colors.background }]}>{price}</Text>
+      <LinearGradient
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
+        style={styles.overlay}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 0.7 }}
+      >
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>{title}</Text>
+          <View style={styles.detailsRow}>
+            <Text style={styles.date}>{date}</Text>
+            <Text style={styles.bullet}>•</Text>
+            <Text style={styles.price}>{price}</Text>
           </View>
-          <View style={styles.stats}>
-            <Text style={[styles.statsText, { color: colors.background }]}>
-              {attendees} Going · {connections} Connections
+          <View style={styles.statsRow}>
+            <Text style={styles.statsText}>
+              {attendees} Going • {connections} Connections
             </Text>
           </View>
-          <Text style={[styles.description, { color: colors.background }]} numberOfLines={2}>
+          <Text style={styles.description} numberOfLines={3}>
             {description}
           </Text>
         </View>
         <View style={styles.hostContainer}>
-          <View style={[styles.hostAvatar, { backgroundColor: colors.background }]}>
-            <Ionicons name="person" size={16} color={colors.primary} />
+          <View style={styles.hostAvatar}>
+            {hostImageUrl ? (
+              <Image source={{ uri: hostImageUrl }} style={styles.hostImage} />
+            ) : (
+              <Ionicons name="person" size={16} color="#666" />
+            )}
           </View>
         </View>
-      </View>
+      </LinearGradient>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: 300,
+    height: 240,
     marginBottom: 16,
     borderRadius: 16,
     overflow: 'hidden',
@@ -73,50 +86,66 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'flex-end',
     padding: 16,
-    justifyContent: 'space-between',
+  },
+  contentContainer: {
+    gap: 4,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginTop: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 2,
   },
-  detailsContainer: {
-    gap: 8,
-  },
-  details: {
+  detailsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
   date: {
-    fontSize: 14,
+    fontSize: 13,
+    color: 'white',
+  },
+  bullet: {
+    fontSize: 13,
+    color: 'white',
+    marginHorizontal: 4,
   },
   price: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    color: 'white',
   },
-  stats: {
+  statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    marginBottom: 2,
   },
   statsText: {
-    fontSize: 14,
+    fontSize: 13,
+    color: 'white',
   },
   description: {
-    fontSize: 14,
+    fontSize: 13,
+    color: 'white',
     opacity: 0.9,
+    lineHeight: 18,
   },
   hostContainer: {
-    alignItems: 'flex-end',
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
   },
   hostAvatar: {
     width: 32,
     height: 32,
     borderRadius: 16,
+    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  hostImage: {
+    width: '100%',
+    height: '100%',
+  }
 });

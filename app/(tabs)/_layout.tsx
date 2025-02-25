@@ -12,10 +12,19 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
+          height: 65,
         },
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.secondary,
+        tabBarInactiveTintColor: colors.tertiary,
         tabBarHideOnKeyboard: true,
+        tabBarLabelPosition: 'below-icon',
+        tabBarLabelStyle: {
+          fontSize: 11,
+          paddingBottom: 5,
+        },
+        tabBarIconStyle: {
+          marginTop: 5,
+        },
       }}>
       <Tabs.Screen
         name="index"

@@ -3,7 +3,7 @@ import { View, Text, Image, ScrollView, StyleSheet, Pressable, ActivityIndicator
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { router, useNavigation } from 'expo-router';
+import { router, useNavigation, Link } from 'expo-router';
 import PageHeader from '../../components/PageHeader';
 import { supabase } from '../../lib/supabase';
 
@@ -172,6 +172,31 @@ export default function ProfileScreen() {
             <Text style={[styles.welcomeText, { color: colors.secondary }]}>
               Sign in to connect with your community, join events, and manage your profile
             </Text>
+            
+            <Link href="/login" asChild>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.authButton,
+                  styles.loginButton,
+                  { opacity: pressed ? 0.8 : 1 }
+                ]}>
+                <Text style={[styles.authButtonText, styles.loginButtonText]}>
+                  Log In
+                </Text>
+              </Pressable>
+            </Link>
+
+            <Link href="/sign-up" asChild>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.authButtonOutline,
+                  { borderColor: colors.primary, opacity: pressed ? 0.8 : 1 }
+                ]}>
+                <Text style={[styles.authButtonOutlineText, { color: colors.primary }]}>
+                  Create Account
+                </Text>
+              </Pressable>
+            </Link>
           </View>
         </View>
       </View>
@@ -446,6 +471,35 @@ const styles = StyleSheet.create({
   },
   mobileEditButtonText: {
     fontSize: 14,
+    fontWeight: '600',
+  },
+  authButton: {
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  loginButton: {
+    backgroundColor: '#000000',
+  },
+  loginButtonText: {
+    color: '#FFFFFF',
+  },
+  authButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  authButtonOutline: {
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 12,
+    borderWidth: 1,
+  },
+  authButtonOutlineText: {
+    fontSize: 16,
     fontWeight: '600',
   },
 });

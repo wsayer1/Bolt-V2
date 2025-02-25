@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, Pressable, ActivityIndicator, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
@@ -234,19 +234,12 @@ export default function EventDetails() {
     }
   };
 
-  const handleEditEvent = () => {
-    router.push(`/events/edit/${id}`);
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
-      weekday: 'long',
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
     });
   };
 
@@ -266,136 +259,112 @@ export default function EventDetails() {
     );
   }
 
-  const isHost = session?.user.id === event.host_id;
   const isFull = event.max_attendees && attendees.length >= event.max_attendees;
+  
+  // Show max 5 attendees in the preview
+  const previewAttendees = attendees.slice(0, 5);
+  const hasMoreAttendees = attendees.length > 5;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView style={styles.scrollView}>
-        <Image source={{ uri: event.image_url }} style={styles.image} />
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: event.image_url }} style={styles.image} />
+          <Pressable
+            style={styles.backButton}
+            onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </Pressable>
+          {event.host.photos?.[0] && (
+            <Image
+              source={{ uri: event.host.photos[0] }}
+              style={styles.hostAvatar}
+            />
+          )}
+        </View>
         
-        <Pressable
-          style={[styles.backButton, { backgroundColor: colors.background }]}
-          onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </Pressable>
-
-        <View style={styles.content}>
+        <View style={styles.contentContainer}>
           <Text style={[styles.title, { color: colors.text }]}>{event.title}</Text>
           
-          <View style={styles.metaInfo}>
-            <View style={styles.dateLocation}>
-              <View style={styles.metaItem}>
-                <Ionicons name="calendar-outline" size={20} color={colors.secondary} />
-                <Text style={[styles.metaText, { color: colors.text }]}>
-                  {formatDate(event.date)}
-                </Text>
-              </View>
-              <View style={styles.metaItem}>
-                <Ionicons name="location-outline" size={20} color={colors.secondary} />
-                <Text style={[styles.metaText, { color: colors.text }]}>
-                  {event.location}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.attendeeInfo}>
-              <Text style={[styles.attendeeCount, { color: colors.text }]}>
-                {attendees.length} Going
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <Ionicons name="calendar-outline" size={20} color={colors.text} />
+              <Text style={[styles.infoText, { color: colors.text }]}>
+                {formatDate(event.date)}
               </Text>
-              {event.max_attendees && (
-                <Text style={[styles.maxAttendees, { color: colors.secondary }]}>
-                  · {event.max_attendees - attendees.length} spots left
-                </Text>
-              )}
             </View>
-
-            <ScrollView
-              horizontal
+            <View style={styles.infoItem}>
+              <Ionicons name="cash-outline" size={20} color={colors.text} />
+              <Text style={[styles.infoText, { color: colors.text }]}>
+                Free
+              </Text>
+            </View>
+          </View>
+          
+          <View style={styles.attendeesSection}>
+            <View style={styles.attendeesHeader}>
+              <Text style={[styles.attendeesCount, { color: colors.text }]}>
+                {attendees.length} Going • 4 Connections
+              </Text>
+              <Pressable>
+                <Text style={[styles.seeAllButton, { color: colors.primary }]}>
+                  See All
+                </Text>
+              </Pressable>
+            </View>
+            
+            <ScrollView 
+              horizontal 
               showsHorizontalScrollIndicator={false}
-              style={styles.attendeeList}>
-              {attendees.map((attendee) => (
+              style={styles.attendeesList}>
+              {previewAttendees.map((attendee) => (
                 <View key={attendee.id} style={styles.attendeeItem}>
                   {attendee.user.photos?.[0] ? (
                     <Image
                       source={{ uri: attendee.user.photos[0] }}
-                      style={styles.attendeePhoto}
+                      style={styles.attendeeAvatar}
                     />
                   ) : (
-                    <View style={[styles.attendeePlaceholder, { backgroundColor: colors.surface }]}>
-                      <Ionicons name="person" size={16} color={colors.secondary} />
+                    <View style={styles.attendeePlaceholder}>
+                      <Ionicons name="person" size={16} color="#666" />
                     </View>
                   )}
                   <Text style={[styles.attendeeName, { color: colors.text }]}>
-                    {attendee.user.full_name}
+                    {attendee.user.full_name.split(' ')[0]}
                   </Text>
                 </View>
               ))}
             </ScrollView>
           </View>
-
-          <View style={styles.hostSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Host</Text>
-            <View style={styles.hostInfo}>
-              {event.host.photos?.[0] ? (
-                <Image
-                  source={{ uri: event.host.photos[0] }}
-                  style={styles.hostPhoto}
-                />
-              ) : (
-                <View style={[styles.hostPlaceholder, { backgroundColor: colors.surface }]}>
-                  <Ionicons name="person" size={24} color={colors.secondary} />
-                </View>
-              )}
-              <Text style={[styles.hostName, { color: colors.text }]}>
-                {event.host.full_name}
-              </Text>
-            </View>
-          </View>
-
+          
           <View style={styles.descriptionSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
             <Text style={[styles.description, { color: colors.text }]}>
               {event.description}
             </Text>
           </View>
         </View>
       </ScrollView>
-
-      <View style={[styles.footer, { backgroundColor: colors.background }]}>
-        {isHost ? (
-          <Pressable
-            style={[styles.editButton, { backgroundColor: colors.primary }]}
-            onPress={handleEditEvent}>
-            <Text style={[styles.buttonText, { color: colors.background }]}>
-              Edit Event
+      
+      <View style={styles.footer}>
+        <Pressable
+          style={[
+            styles.rsvpButton,
+            { backgroundColor: hasRsvped ? colors.secondary : colors.primary },
+            isFull && !hasRsvped && styles.disabledButton
+          ]}
+          onPress={handleRSVP}
+          disabled={isRsvping || (isFull && !hasRsvped)}>
+          {isRsvping ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.rsvpButtonText}>
+              {hasRsvped ? 'CANCEL' : isFull ? 'EVENT FULL' : 'RSVP'}
             </Text>
-          </Pressable>
-        ) : (
-          <Pressable
-            style={[
-              styles.rsvpButton,
-              { backgroundColor: hasRsvped ? colors.surface : colors.primary },
-              (isFull && !hasRsvped) && styles.rsvpButtonDisabled,
-            ]}
-            onPress={handleRSVP}
-            disabled={isRsvping || (isFull && !hasRsvped)}>
-            {isRsvping ? (
-              <ActivityIndicator color={hasRsvped ? colors.primary : colors.background} />
-            ) : (
-              <Text
-                style={[
-                  styles.buttonText,
-                  { color: hasRsvped ? colors.primary : colors.background },
-                ]}>
-                {hasRsvped ? 'Cancel RSVP' : isFull ? 'Event Full' : 'RSVP'}
-              </Text>
-            )}
-          </Pressable>
-        )}
+          )}
+        </Pressable>
       </View>
       <Toast />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -403,18 +372,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   loading: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   errorText: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
   },
-  scrollView: {
-    flex: 1,
+  imageContainer: {
+    position: 'relative',
   },
   image: {
     width: '100%',
@@ -422,141 +394,118 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 60,
-    left: 20,
+    top: 16,
+    left: 16,
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
-  content: {
+  hostAvatar: {
+    position: 'absolute',
+    bottom: -20,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  contentContainer: {
     padding: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 20,
+    fontWeight: 'bold',
+    marginTop: 8,
+    marginBottom: 16,
   },
-  metaInfo: {
+  infoRow: {
+    flexDirection: 'row',
     marginBottom: 24,
   },
-  dateLocation: {
-    gap: 12,
-    marginBottom: 20,
-  },
-  metaItem: {
+  infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    marginRight: 16,
   },
-  metaText: {
+  infoText: {
     fontSize: 16,
+    marginLeft: 8,
   },
-  attendeeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  attendeeCount: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  maxAttendees: {
-    fontSize: 16,
-    marginLeft: 4,
-  },
-  attendeeList: {
-    flexDirection: 'row',
-  },
-  attendeeItem: {
-    marginRight: 20,
-    alignItems: 'center',
-  },
-  attendeePhoto: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginBottom: 4,
-  },
-  attendeePlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  attendeeName: {
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  hostSection: {
+  attendeesSection: {
     marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  hostInfo: {
+  attendeesHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 12,
+    marginBottom: 16,
   },
-  hostPhoto: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  hostPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hostName: {
+  attendeesCount: {
     fontSize: 16,
     fontWeight: '500',
   },
+  seeAllButton: {
+    fontSize: 14,
+    fontWeight: '500',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  attendeesList: {
+    flexDirection: 'row',
+  },
+  attendeeItem: {
+    alignItems: 'center',
+    marginRight: 16,
+    width: 60,
+  },
+  attendeeAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  attendeePlaceholder: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#E0E0E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  attendeeName: {
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
+  },
   descriptionSection: {
-    marginBottom: 24,
+    paddingTop: 8,
   },
   description: {
     fontSize: 16,
     lineHeight: 24,
   },
   footer: {
-    padding: 20,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#ccc',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
   rsvpButton: {
-    height: 50,
-    borderRadius: 25,
+    padding: 16,
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  editButton: {
-    height: 50,
-    borderRadius: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
   },
-  rsvpButtonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
+  rsvpButtonText: {
+    color: 'white',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });
